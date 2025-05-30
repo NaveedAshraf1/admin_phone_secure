@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Preview Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f7fa;
+    }
+    .container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #2563eb;
+      margin-top: 0;
+    }
+    .map-container {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .map-image {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .map-link {
+      display: block;
+      position: relative;
+      width: fit-content;
+    }
+    .map-overlay {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #4b5563;
+      display: flex;
+      align-items: center;
+    }
+    .coordinates {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Map Preview Test</h1>
+    <p>This page demonstrates how our application displays Google Maps location links.</p>
+    
+    <div class="container">
+      <h2>Test Case: Google Maps URL</h2>
+      <p>URL: <a href="https://www.google.com/maps?q=31.0310335,74.2599316">https://www.google.com/maps?q=31.0310335,74.2599316</a></p>
+      
+      <div class="map-container">
+        <a href="https://www.google.com/maps?q=31.0310335,74.2599316" target="_blank" class="map-link">
+          <img 
+            src="https://static-maps.yandex.ru/1.x/?ll=74.2599316,31.0310335&size=600,300&z=14&l=map&pt=74.2599316,31.0310335,pm2rdm" 
+            alt="Location Map" 
+            class="map-image"
+          />
+          <div class="map-overlay">
+            <svg style="width: 12px; height: 12px; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Open in Google Maps
+          </div>
+        </a>
+        <div class="coordinates">
+          Location: 31.0310335, 74.2599316
+        </div>
+      </div>
+    </div>
+    
+    <div class="container">
+      <h2>How It Works</h2>
+      <p>Our application:</p>
+      <ol>
+        <li>Detects Google Maps URLs in chat messages using regex</li>
+        <li>Extracts latitude and longitude coordinates</li>
+        <li>Generates a static map image using Yandex Maps API</li>
+        <li>Makes the image clickable to open the original Google Maps link</li>
+      </ol>
+    </div>
+  </div>
+</body>
+</html>
