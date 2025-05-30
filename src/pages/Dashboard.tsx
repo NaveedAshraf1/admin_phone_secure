@@ -44,32 +44,17 @@ const extractMapCoordinates = (url: string): { lat: string, lng: string } | null
   if (!url || typeof url !== 'string') return null;
   
   try {
-    // Handle different Google Maps URL formats
-    
-    // Format 1: https://www.google.com/maps/place/LatLng
-    if (url.includes('@') && url.includes(',')) {
-      const parts = url.split('@')[1].split(',');
-      if (parts.length >= 2) {
-        return { lat: parts[0], lng: parts[1].split('z/')[0] };
-      }
-    }
-    
-    // Format 2: https://www.google.com/maps?q=lat,lng
-    if (url.includes('q=')) {
+    // Check if it's a Google Maps URL with coordinates
+    if (url.includes('google.com/maps') && url.includes('q=')) {
+      // Extract the coordinates part after q=
       const match = url.match(/q=([\d.-]+),([\d.-]+)/);
       if (match && match.length === 3) {
-        return { lat: match[1], lng: match[2] };
+        return {
+          lat: match[1],
+          lng: match[2]
+        };
       }
     }
-    
-    // Format 3: https://www.google.com/maps/search/?api=1&query=lat,lng
-    if (url.includes('query=')) {
-      const match = url.match(/query=([\d.-]+),([\d.-]+)/);
-      if (match && match.length === 3) {
-        return { lat: match[1], lng: match[2] };
-      }
-    }
-    
     return null;
   } catch (error) {
     console.error('Error extracting coordinates:', error);
@@ -286,112 +271,42 @@ const MapPreview: React.FC<{
   coordinates: { lat: string, lng: string },
   pathCoordinates?: { lat: string, lng: string }[] 
 }> = ({ url, coordinates, pathCoordinates }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  
   // Determine if we're showing a single point or a path
   const isPath = pathCoordinates && pathCoordinates.length >= 2;
   
-  // Validate coordinates
-  const isValidCoordinate = (coord: { lat: string, lng: string }) => {
-    const lat = parseFloat(coord.lat);
-    const lng = parseFloat(coord.lng);
-    return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-  };
-  
   // Build the appropriate Google Maps embed URL
-  const getMapSrc = () => {
-    const API_KEY = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8';
+  let mapSrc = '';
+  
+  if (isPath) {
+    // For a path, use the directions mode
+    const origin = `${pathCoordinates[0].lat},${pathCoordinates[0].lng}`;
+    const destination = `${pathCoordinates[pathCoordinates.length-1].lat},${pathCoordinates[pathCoordinates.length-1].lng}`;
     
-    if (!API_KEY) {
-      setApiError('Google Maps API key is missing');
-      return '';
+    // Add waypoints if there are more than 2 points
+    let waypoints = '';
+    if (pathCoordinates.length > 2) {
+      waypoints = '&waypoints=' + pathCoordinates.slice(1, -1)
+        .map(coord => `${coord.lat},${coord.lng}`)
+        .join('|');
     }
     
-    if (isPath) {
-      // Validate all path coordinates
-      if (pathCoordinates.some(coord => !isValidCoordinate(coord))) {
-        setApiError('Invalid coordinates in path');
-        return '';
-      }
-      
-      const origin = `${pathCoordinates[0].lat},${pathCoordinates[0].lng}`;
-      const destination = `${pathCoordinates[pathCoordinates.length-1].lat},${pathCoordinates[pathCoordinates.length-1].lng}`;
-      
-      // Add waypoints if there are more than 2 points
-      let waypoints = '';
-      if (pathCoordinates.length > 2) {
-        waypoints = '&waypoints=' + pathCoordinates.slice(1, -1)
-          .map(coord => `${coord.lat},${coord.lng}`)
-          .join('|');
-      }
-      
-      return `https://www.google.com/maps/embed/v1/directions?key=${API_KEY}&origin=${origin}&destination=${destination}${waypoints}&mode=driving`;
-    } else {
-      // Validate single coordinate
-      if (!isValidCoordinate(coordinates)) {
-        setApiError('Invalid coordinates');
-        return '';
-      }
-      
-      return `https://www.google.com/maps/embed/v1/place?key=${API_KEY}&q=${coordinates.lat},${coordinates.lng}&zoom=14`;
-    }
-  };
-  
-  const mapSrc = getMapSrc();
-  
-  // Handle iframe load events
-  const handleIframeLoad = () => {
-    setIsLoading(false);
-    setApiError(null);
-  };
-  
-  const handleIframeError = () => {
-    setIsLoading(false);
-    setApiError('Failed to load map. Please try again.');
-  };
-  
-  if (apiError) {
-    return (
-      <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg">
-        <div className="text-red-600 text-sm">{apiError}</div>
-        <a 
-          href={url} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-blue-500 hover:underline text-sm mt-2 inline-block"
-        >
-          Open in Google Maps
-        </a>
-      </div>
-    );
+    mapSrc = `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${origin}&destination=${destination}${waypoints}&mode=driving`;
+  } else {
+    // For a single point, use place mode
+    mapSrc = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${coordinates.lat},${coordinates.lng}&zoom=14`;
   }
   
   return (
     <div className="w-full">
-      <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
-        <div className="relative" style={{ paddingBottom: '60%' }}>
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-              <div className="animate-pulse text-gray-500">Loading map...</div>
-            </div>
-          )}
-          <iframe 
-            ref={iframeRef}
-            width="100%" 
-            height="100%"
-            frameBorder="0"
-            style={{ border: 0 }}
-            src={mapSrc}
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
-            aria-label={isPath ? 'Route Map' : 'Location Map'}
-            loading="lazy"
-          />
-        </div>
+      <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        <iframe 
+          width="100%" 
+          height="250" 
+          frameBorder="0" 
+          src={mapSrc}
+          allowFullScreen
+          className="w-full"
+        ></iframe>
         <div className="p-2 bg-white border-t border-gray-200">
           <a 
             href={url} 
