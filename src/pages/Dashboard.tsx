@@ -421,8 +421,6 @@ const dummyDeviceInfo = {
   location: "New York, USA",
 };
 
-
-
 const Dashboard: React.FC = () => {
   // Mobile menu state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
