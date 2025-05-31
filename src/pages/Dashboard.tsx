@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import type { ReactElement } from "react";
 import { database } from '../firebase/config';
 import { ref, push, set, onValue, off } from 'firebase/database';
+import LocationTimelineMap from '../components/LocationTimelineMap';
 
 // Server Commands as a union type and object
 export const ServerCommands = {
@@ -465,6 +466,11 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  interface LocationModel {
+    lat: number;
+    lng: number;
+    timestamp: number;
+  }
 
   // Chat state
   interface ChatMessage {
@@ -474,7 +480,8 @@ const Dashboard: React.FC = () => {
     status: string;
     response?: string;
     responseTimestamp?: number;
-    timestamp?: number;
+    timelineDate?: string; // Selected date in dd-MM-yyyy format
+    locationTimeline?: LocationModel[];
   }
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -646,22 +653,41 @@ const Dashboard: React.FC = () => {
                       <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-2xl max-w-xs shadow animate-in fade-in">
                         <div className="flex items-center gap-2">
                           {/* Media content: Voice note, Image, Map, Path, or Text */}
-                          {isFirebaseVoiceUrl(msg.response) ? (
-                            <VoiceNotePlayer url={msg.response} />
-                          ) : isFirebaseImageUrl(msg.response) ? (
-                            <FirebaseImage url={msg.response} />
+                          {msg.command === ServerCommands.GetLocationTimeline && msg.locationTimeline && msg.locationTimeline.length > 0 ? (
+                            <div className="w-full max-w-md">
+                              <LocationTimelineMap locationTimeline={msg.locationTimeline} />
+                              <div className="text-xs text-gray-500 mt-1 text-center">
+                                {msg.timelineDate ? `Location timeline for ${msg.timelineDate}` : 'Location timeline'}
+                              </div>
+                            </div>
                           ) : isFirebaseUrl(msg.response) ? (
                             <a href={msg.response} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                               View attachment
                             </a>
                           ) : extractPathCoordinates(msg.response) ? (
-                            <MapPreview 
-                              url={`https://www.google.com/maps/dir/${extractPathCoordinates(msg.response)!.map(coord => `${coord.lat},${coord.lng}`).join('/')}`} 
-                              coordinates={extractPathCoordinates(msg.response)![0]} 
-                              pathCoordinates={extractPathCoordinates(msg.response)!} 
-                            />
+                            <div className="bg-blue-50 p-2 rounded-lg text-sm">
+                              <div>Path coordinates available:</div>
+                              <a 
+                                href={`https://www.google.com/maps/dir/${extractPathCoordinates(msg.response)!.map(coord => `${coord.lat},${coord.lng}`).join('/')}`}
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-blue-500 underline"
+                              >
+                                View on Google Maps
+                              </a>
+                            </div>
                           ) : extractMapCoordinates(msg.response) ? (
-                            <MapPreview url={msg.response} coordinates={extractMapCoordinates(msg.response)!} />
+                            <div className="bg-blue-50 p-2 rounded-lg text-sm">
+                              <div>Location: {extractMapCoordinates(msg.response)!.lat}, {extractMapCoordinates(msg.response)!.lng}</div>
+                              <a 
+                                href={msg.response} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-blue-500 underline"
+                              >
+                                View on Google Maps
+                              </a>
+                            </div>
                           ) : (
                             <span className="whitespace-pre-wrap break-words">{msg.response}</span>
                           )}
